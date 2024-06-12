@@ -10,6 +10,7 @@ class Genre(models.Model):
         return self.name
 
 
+
 class ItemModel(models.Model):
     name = models.CharField(max_length=100)
     image = models.ImageField(upload_to='')
@@ -17,8 +18,20 @@ class ItemModel(models.Model):
     explanation = models.TextField()
     genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
     author = models.ForeignKey(User, on_delete=models.CASCADE)
-    good = models.IntegerField(null=True, blank=True, default=0)
-
 
     def __str__(self):
         return self.name
+
+    def count_likes(self):
+        return self.like_set.count()
+
+
+class Like(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    item = models.ForeignKey(ItemModel, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'item')
+
+

@@ -1,5 +1,5 @@
 from django.db.models.query import QuerySet
-from .models import ItemModel, Genre
+from .models import ItemModel, Genre, Like
 from django.shortcuts import render
 from django.shortcuts import redirect
 from django.contrib.auth.models import User
@@ -47,8 +47,9 @@ def logoutfunc(request):
 
 def listfunc(request):
     object_list = ItemModel.objects.all()
+    genre_list = Genre.objects.all()
     username = request.user.username
-    return render(request, 'list.html',{'object_list':object_list, 'username':username})
+    return render(request, 'list.html',{'object_list':object_list, 'genre_list':genre_list, 'username':username})
 
 
 
@@ -90,8 +91,25 @@ def detailfunc(request, pk):
     username = request.user.username
     return render(request, 'detail.html', {'object':object, 'username':username})
 
-def goodfunc(request, pk):
-    object = get_object_or_404(ItemModel, pk=pk)
-    object.good = object.good + 1
-    object.save()
-    return redirect("list")
+def like_item(request, pk):
+    item = get_object_or_404(ItemModel, pk=pk)
+    like, created = Like.objects.get_or_create(user=request.user, item=item)
+    if not created:
+        like.delete()
+    return redirect('list')
+
+def liked_items_list(request):
+    likes = Like.objects.filter(user=request.user)
+    items = [like.item for like in likes]
+    username = request.user.username
+    return render(request, 'liked_items_list.html', {'items': items, 'username':username})
+
+def item_filter(request):
+    username = request.user.username
+    genre_name = request.GET.get('genre')
+    if genre_name:
+        filtered_items = ItemModel.objects.filter(genre__name=genre_name).order_by('name')
+    else:
+        filtered_items = ItemModel.objects.all().order_by('genre__name')
+    return render(request, 'genrefilter.html', {'filtered_items': filtered_items, 'username':username})
+
