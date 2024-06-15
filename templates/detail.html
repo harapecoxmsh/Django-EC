@@ -34,7 +34,9 @@
                         </svg>
                         <span>{{ object.count_likes }}</span>
                     </a>
+                    <a href="{% url 'checkout' object.pk %}">
                     <button class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">購入手続きへ</button>
+                    </a>
                 </div>
                 <div class="mt-6">
                     <p class="text-sm text-gray-500">出品者: <a href="#" class="text-blue-600 hover:underline">{{ object.author }}</a></p>

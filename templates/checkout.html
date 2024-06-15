@@ -1,0 +1,25 @@
+<!-- checkout.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Checkout</title>
+    <script src="https://js.stripe.com/v3/"></script>
+</head>
+<body>
+
+    <form action="" method="post">
+        {% csrf_token %}
+        <script
+          src="https://checkout.stripe.com/checkout.js" class="stripe-button"
+          data-key="{{ sec_api_key }}"
+          data-amount="{{ amount }}"
+          data-name="Demo Site"
+          data-description="Example charge"
+          data-locale="auto"
+          data-currency="jpy">
+        </script>
+      </form>
+
+</body>
+</html>

@@ -1,4 +1,5 @@
 from django.db.models.query import QuerySet
+import stripe.error
 from .models import ItemModel, Genre, Like
 from django.shortcuts import render
 from django.shortcuts import redirect
@@ -12,7 +13,12 @@ from django.views.generic import ListView
 from django.urls import reverse_lazy
 from .forms import ItemForm
 from django.shortcuts import get_object_or_404
+from django.conf import settings
 
+import stripe
+
+stripe.pub_api_key = settings.STRIPE_PUBLISHABLE_KEY
+stripe.sec_api_key = settings.STRIPE_SECRET_KEY
 
 # Create your views here.
 def signupfunc(request):
@@ -113,3 +119,22 @@ def item_filter(request):
         filtered_items = ItemModel.objects.all().order_by('genre__name')
     return render(request, 'genrefilter.html', {'filtered_items': filtered_items, 'username':username})
 
+def checkout(request, pk):
+    order_item = ItemModel.objects.get(pk=pk)
+    amount = int(order_item.price)
+    if request.method == 'POST':
+        token = request.POST['stripeToken']
+
+        try:
+            charge = stripe.Charge.create(
+                amount=amount,
+                currency='jpy',
+                description='example charge',
+                source=token,
+            )
+            return render(request, 'success.html')
+        except stripe.error.CardError as e:
+            error_msg = e.error.message
+            return render(request, 'error.html', {'error_msg':error_msg})
+
+    return render(request, 'checkout.html', {'amount':amount, 'sec_api_key':stripe.sec_api_key, 'pub_api_key':stripe.pub_api_key})
