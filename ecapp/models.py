@@ -18,6 +18,9 @@ class ItemModel(models.Model):
     explanation = models.TextField()
     genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
     author = models.ForeignKey(User, on_delete=models.CASCADE)
+    sold = models.BooleanField(default=False)
+    price_id = models.CharField(max_length=255, unique=True, null=True, blank=True)
+
 
     def __str__(self):
         return self.name

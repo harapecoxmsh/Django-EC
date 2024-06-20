@@ -1,25 +1,23 @@
-<!-- checkout.html -->
+
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
+<html>
+  <head>
     <title>Checkout</title>
+    <link rel="stylesheet" href="style.css">
     <script src="https://js.stripe.com/v3/"></script>
-</head>
-<body>
-
-    <form action="" method="post">
-        {% csrf_token %}
-        <script
-          src="https://checkout.stripe.com/checkout.js" class="stripe-button"
-          data-key="{{ sec_api_key }}"
-          data-amount="{{ amount }}"
-          data-name="Demo Site"
-          data-description="Example charge"
-          data-locale="auto"
-          data-currency="jpy">
-        </script>
+  </head>
+  <body>
+    <section>
+      <div class="product">
+        <h1>{{ order_item.name }}</h1>
+        <img src="{{ order_item.image }}">
+        <div class="description">
+          <h3>¥ {{ order_item.price }}</h3>
+        </div>
+      </div>
+      <form action="{% url 'checkout' order_item.pk %}" method="POST">{% csrf_token %}
+        <button type="submit" id="checkout-button">購入</button>
       </form>
-
-</body>
+    </section>
+  </body>
 </html>

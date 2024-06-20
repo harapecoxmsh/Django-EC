@@ -1,6 +1,6 @@
 
 from django.urls import path
-from .views import signupfunc, signinfunc, logoutfunc, listfunc, ItemCreate, detailfunc, ItemSearch, like_item, liked_items_list, item_filter, checkout
+from .views import signupfunc, signinfunc, logoutfunc, listfunc, ItemCreate, detailfunc, ItemSearch, like_item, liked_items_list, item_filter, checkout, success, cancel
 
 
 urlpatterns = [
@@ -14,7 +14,9 @@ urlpatterns = [
     path("like/<int:pk>", like_item, name="like_item"),
     path("myliked/", liked_items_list, name="liked_items_list"),
     path("filter_item/", item_filter, name="filter_item"),
-    path("checkout/<int:pk>", checkout, name="checkout"),
+    path("checkout/<int:pk>/", checkout, name="checkout"),
+    path("success/", success, name="success"),
+    path("cancel/", cancel, name="cancel")
 
 
 

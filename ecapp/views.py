@@ -17,8 +17,11 @@ from django.conf import settings
 
 import stripe
 
-stripe.pub_api_key = settings.STRIPE_PUBLISHABLE_KEY
-stripe.sec_api_key = settings.STRIPE_SECRET_KEY
+
+stripe.api_key = settings.STRIPE_SECRET_KEY
+
+
+
 
 # Create your views here.
 def signupfunc(request):
@@ -57,7 +60,21 @@ def listfunc(request):
     username = request.user.username
     return render(request, 'list.html',{'object_list':object_list, 'genre_list':genre_list, 'username':username})
 
+def create_stripe_price(product_name, unit_amount):
 
+    product_data = {
+        'name': product_name
+    }
+
+    product = stripe.Product.create(**product_data)
+
+    price = stripe.Price.create(
+        product=product.id,
+        unit_amount=unit_amount,
+        currency='jpy'
+    )
+
+    return price.id
 
 class ItemCreate(CreateView):
     model = ItemModel
@@ -74,6 +91,15 @@ class ItemCreate(CreateView):
     def form_valid(self, form):
         form.instance.author = self.request.user
         return super().form_valid(form)
+
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        product_name = form.cleaned_data['name']
+        unit_amount = form.cleaned_data['price']
+        form.instance.price_id = create_stripe_price(product_name, unit_amount)
+        return super().form_valid(form)
+
+
 
 class ItemSearch(ListView):
     model = ItemModel
@@ -119,22 +145,39 @@ def item_filter(request):
         filtered_items = ItemModel.objects.all().order_by('genre__name')
     return render(request, 'genrefilter.html', {'filtered_items': filtered_items, 'username':username})
 
+# def mark_item_as_sold(request, pk):
+#     item = get_object_or_404(ItemModel, pk=pk)
+#     item.sold = True
+#     item.save()
+#     return redirect('list')
+
+DOMAIN = settings.SITE_DOMAIN
+
 def checkout(request, pk):
-    order_item = ItemModel.objects.get(pk=pk)
-    amount = int(order_item.price)
-    if request.method == 'POST':
-        token = request.POST['stripeToken']
+    stripe.api_key = settings.STRIPE_SECRET_KEY
+    order_item = get_object_or_404(ItemModel, pk=pk)
+    price_id = order_item.price_id
 
-        try:
-            charge = stripe.Charge.create(
-                amount=amount,
-                currency='jpy',
-                description='example charge',
-                source=token,
-            )
-            return render(request, 'success.html')
-        except stripe.error.CardError as e:
-            error_msg = e.error.message
-            return render(request, 'error.html', {'error_msg':error_msg})
+    if request.method == "POST":
 
-    return render(request, 'checkout.html', {'amount':amount, 'sec_api_key':stripe.sec_api_key, 'pub_api_key':stripe.pub_api_key})
+        checkout_session = stripe.checkout.Session.create(
+            line_items=[
+                {
+                    "price": price_id,
+                    "quantity": 1,
+                }
+            ],
+            mode="payment",
+            success_url=DOMAIN+"success",
+            cancel_url=DOMAIN+"cancel"
+        )
+        return redirect(checkout_session.url, code=303)
+    return render(request, "checkout.html", {'order_item': order_item})
+
+
+def success(request):
+    return render(request, "success.html")
+
+
+def cancel(request):
+    return render(request, "cancel.html")
